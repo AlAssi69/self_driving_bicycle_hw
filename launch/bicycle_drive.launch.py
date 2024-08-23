@@ -5,7 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import RegisterEventHandler
 
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import Command, PathJoinSubstitution
 from launch.event_handlers import OnProcessExit
 
 from launch_ros.actions import Node
@@ -32,9 +32,6 @@ def generate_launch_description():
         name="robot_state_publisher",
         output="both",
         parameters=[robot_description_params],
-        # remappings=[
-        #     ("/bicycle_controller/reference_unstamped", "/cmd_vel"),
-        # ],
     )
 
     node_joint_state_publisher_gui = Node(
@@ -66,6 +63,9 @@ def generate_launch_description():
         executable="ros2_control_node",
         parameters=[robot_description_params, controller_params],
         output="both",
+        remappings=[
+            ("/bicycle_controller/tf_odometry", "/tf"),
+        ],
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -108,6 +108,7 @@ def generate_launch_description():
         [
             controller_manager,
             node_robot_state_publisher,
+            # node_joint_state_publisher_gui,
             joint_state_broadcaster_spawner,
             delay_rviz_after_joint_state_broadcaster_spawner,
             delay_bicycle_controller_spawner_after_joint_state_broadcaster_spawner,
