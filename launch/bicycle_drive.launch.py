@@ -32,6 +32,9 @@ def generate_launch_description():
         name="robot_state_publisher",
         output="both",
         parameters=[robot_description_params],
+        remappings=[
+            ("/bicycle_controller/reference_unstamped", "/cmd_vel"),
+        ],
     )
 
     node_joint_state_publisher_gui = Node(
