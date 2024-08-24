@@ -9,12 +9,60 @@ int qtde;
 int enc = 0;
 int pos = 0;
 
+String *split(String &v, char delimiter, int &length);
+
+void setup()
+{
+  pinMode(LED_PIN1, OUTPUT);
+  pinMode(LED_PIN2, OUTPUT);
+
+  while (!Serial)
+    ;
+
+  Serial.begin(57600);
+}
+
+void loop()
+{
+  if (enc >= 100)
+    enc = 0;
+  else
+    enc = millis() / 500;
+  
+  pos = 0;
+
+  if (Serial.available() > 0)
+  {
+    in = Serial.readString();
+    in.trim();
+
+    in_split = split(in, ' ', qtde);
+
+    if (in_split[0] == "e")
+    {
+      Serial.print(pos);
+      Serial.print(" ");
+      Serial.println(enc);
+    }
+    else if (in_split[0] == "m")
+    {
+      intensity1 = in_split[1].toInt();
+      intensity2 = in_split[2].toInt();
+
+      analogWrite(LED_PIN1, intensity1);
+      analogWrite(LED_PIN2, intensity2);
+
+      Serial.println("DONE!");
+    }
+  }
+}
+
 String *split(String &v, char delimiter, int &length)
 {
   length = 1;
   bool found = false;
 
-  // Figure out how many itens the array should have
+  // Figure out how many items the array should have
   for (int i = 0; i < v.length(); i++)
   {
     if (v[i] == delimiter)
@@ -54,46 +102,4 @@ String *split(String &v, char delimiter, int &length)
 
   // No delimiter found
   return nullptr;
-}
-
-void setup()
-{
-  pinMode(LED_PIN1, OUTPUT);
-  pinMode(LED_PIN2, OUTPUT);
-
-  while (!Serial)
-    ;
-
-  Serial.begin(9600);
-}
-
-void loop()
-{
-  enc = millis() / 500;
-  pos = 0;
-
-  if (Serial.available() > 0)
-  {
-    in = Serial.readString();
-    in.trim();
-
-    in_split = split(in, ' ', qtde);
-
-    if (in_split[0] == "e")
-    {
-      Serial.print(pos);
-      Serial.print(" ");
-      Serial.println(enc);
-    }
-    else if (in_split[0] == "m")
-    {
-      intensity1 = in_split[1].toInt();
-      intensity2 = in_split[2].toInt();
-
-      analogWrite(LED_PIN1, intensity1);
-      analogWrite(LED_PIN2, intensity2);
-
-      Serial.println("DONE!");
-    }
-  }
 }
