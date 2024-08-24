@@ -213,8 +213,23 @@ namespace bicycledrive_arduino
 
     RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"), "Writing...!");
 
-    int motor_f_counts_per_loop = wheel_f_.cmd;
-    int motor_r_counts_per_loop = wheel_r_.cmd; // / wheel_r_.rads_per_count / cfg_.loop_rate;
+    RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"),
+                "Wheel F cmd is '%f'.", wheel_f_.cmd);
+    RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"),
+                "Wheel R cmd is '%f'.", wheel_r_.cmd);
+
+    int motor_f_counts_per_loop = 0;
+    int motor_r_counts_per_loop = 0;
+
+    if (wheel_f_.cmd != 0)
+      motor_f_counts_per_loop = 255;
+    else
+      motor_f_counts_per_loop = 0;
+
+    if (wheel_r_.cmd != 0)
+      motor_r_counts_per_loop = 255;
+    else
+      motor_r_counts_per_loop = 0;
 
     comms_.set_motor_values(motor_f_counts_per_loop, motor_r_counts_per_loop);
 
