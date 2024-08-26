@@ -79,7 +79,8 @@ public:
 
     if (print_output)
     {
-      std::cout << "Sent: " << msg_to_send << " Recv: " << response << std::endl;
+      std::cout << "\nSent: " << msg_to_send << " Recv: " << response << std::endl
+                << std::endl;
     }
 
     return response;
@@ -92,7 +93,7 @@ public:
 
   void read_encoder_values(int &val_1, int &val_2)
   {
-    std::string response = send_msg("e e");
+    std::string response = send_msg("e\r");
 
     std::string delimiter = " ";
     size_t del_pos = response.find(delimiter);
