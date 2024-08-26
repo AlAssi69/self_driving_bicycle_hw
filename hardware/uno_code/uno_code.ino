@@ -1,36 +1,49 @@
-#define LED_PIN1 11
-#define LED_PIN2 3
+#include <PID_v1.h>
+#include "DCMotor.h"
+#include "IRSensor.h"
+
+double rev = 0;
 
 String in = "";
 String *in_split;
-int intensity1 = 0;
-int intensity2 = 0;
 int qtde;
-int enc = 0;
-int pos = 0;
+int motorSpeed = 0;
+
+int irCount = 0;
+void countRev();
 
 String *split(String &v, char delimiter, int &length);
+void plot(String label, float value, bool isLastGraph = false);
+
+DCMotor dc;
+IRSensor ir(countRev, 2, RISING, 95);
+
+// Define Variables we'll be connecting to
+double setPoint, input, output;
+
+// Specify the links and initial tuning parameters
+double kp = 2, ki = 0, kd = 0;
+PID motorPID(&input, &output, &setPoint, kp, ki, kd, DIRECT);
 
 void setup()
 {
-  pinMode(LED_PIN1, OUTPUT);
-  pinMode(LED_PIN2, OUTPUT);
-
   while (!Serial)
+  {
     ;
+  }
 
   Serial.begin(57600);
+  // Serial.setTimeout(3000);
+
+  input = 0;
+  setPoint = rev * 8;
+  motorPID.SetMode(AUTOMATIC);
+  motorPID.SetOutputLimits(0, 128);
 }
 
 void loop()
 {
-  if (enc >= 100)
-    enc = 0;
-  else
-    enc = millis() / 500;
-  
-  pos = 0;
-
+#if 0
   if (Serial.available() > 0)
   {
     in = Serial.readString();
@@ -38,22 +51,71 @@ void loop()
 
     in_split = split(in, ' ', qtde);
 
-    if (in_split[0] == "e")
+    if (in == "e")
     {
-      Serial.print(pos);
+      Serial.print(irCount);
       Serial.print(" ");
-      Serial.println(enc);
+      Serial.println("0");
     }
     else if (in_split[0] == "m")
     {
-      intensity1 = in_split[1].toInt();
-      intensity2 = in_split[2].toInt();
+      rev = in_split[2].toInt();
+      setPoint = rev * 8;
+      input = irCount;
+      motorPID.Compute();
 
-      analogWrite(LED_PIN1, intensity1);
-      analogWrite(LED_PIN2, intensity2);
+      if (output > 50)
+        output = 50;
 
-      Serial.println("DONE!");
+      if (output < 15)
+        output = 0;
+
+      motorSpeed = output;
+      dc.moveMotor(motorSpeed);
+      
+      Serial.println(motorSpeed);
     }
+  }
+#endif
+
+#if 1
+  if (Serial.available() > 0)
+  {
+    in = Serial.readString();
+    in.trim();
+
+    in_split = split(in, ' ', qtde);
+
+    if (in == "e")
+    {
+      Serial.print(irCount);
+      Serial.print(" ");
+      Serial.println("0");
+    }
+    else if (in_split[0] == "m")
+    {
+      motorSpeed = in_split[2].toInt();
+
+      if (motorSpeed > 0)
+        motorSpeed = 35;
+
+      dc.moveMotor(motorSpeed);
+      Serial.println(motorSpeed);
+    }
+  }
+#endif
+}
+
+void countRev()
+{
+  // Serial.print("INT!!!\t");
+  // Serial.println(irCount);
+
+  ir.currentTime = millis();
+  if (ir.currentTime - ir.lastTime >= ir.debounceDelay)
+  {
+    irCount++;
+    ir.lastTime = ir.currentTime;
   }
 }
 
@@ -76,7 +138,6 @@ String *split(String &v, char delimiter, int &length)
   // and split the String
   if (found)
   {
-
     // Create array
     String *valores = new String[length];
 
@@ -102,4 +163,19 @@ String *split(String &v, char delimiter, int &length)
 
   // No delimiter found
   return nullptr;
+}
+
+void plot(String label, float value, bool isLastGraph = false)
+{
+  Serial.print(label); // May be empty string
+
+  if (label != "")
+    Serial.print(": ");
+
+  Serial.print(value);
+
+  if (isLastGraph == false)
+    Serial.print(", ");
+  else
+    Serial.println();
 }
