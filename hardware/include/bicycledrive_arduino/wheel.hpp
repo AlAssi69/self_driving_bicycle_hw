@@ -9,7 +9,7 @@ class Wheel
 public:
   std::string name = "";
   int enc = 0;
-  double cmd = 128;
+  double cmd = 0;
   double pos = 0;
   double vel = 0;
   double rads_per_count = 0;
