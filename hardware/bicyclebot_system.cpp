@@ -186,9 +186,9 @@ namespace bicycledrive_arduino
       return hardware_interface::return_type::ERROR;
     }
 
-    RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"), "Reading...!");
+    // RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"), "Reading...!");
 
-    comms_.read_encoder_values(wheel_f_.enc, wheel_r_.enc);
+    comms_.read_encoder_values(wheel_r_.enc, wheel_f_.enc);
 
     double delta_seconds = period.seconds();
 
@@ -198,6 +198,9 @@ namespace bicycledrive_arduino
 
     pos_prev = wheel_r_.pos;
     wheel_r_.pos = wheel_r_.calc_enc_angle();
+
+    wheel_r_.pos = wheel_r_.enc * 0.2;
+
     wheel_r_.vel = (wheel_r_.pos - pos_prev) / delta_seconds;
 
     return hardware_interface::return_type::OK;
@@ -211,25 +214,17 @@ namespace bicycledrive_arduino
       return hardware_interface::return_type::ERROR;
     }
 
-    RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"), "Writing...!");
+    // RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"), "Writing...!");
 
-    RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"),
-                "Wheel F cmd is '%f'.", wheel_f_.cmd);
-    RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"),
-                "Wheel R cmd is '%f'.", wheel_r_.cmd);
+    // RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"),
+    //             "Wheel F cmd is '%f'.", wheel_f_.cmd);
+    // RCLCPP_INFO(rclcpp::get_logger("BicycleDriveArduinoHardware"),
+    //             "Wheel R cmd is '%f'.", wheel_r_.cmd);
 
     int motor_f_counts_per_loop = 0;
     int motor_r_counts_per_loop = 0;
 
-    if (wheel_f_.cmd != 0)
-      motor_f_counts_per_loop = 255;
-    else
-      motor_f_counts_per_loop = 0;
-
-    if (wheel_r_.cmd != 0)
-      motor_r_counts_per_loop = 255;
-    else
-      motor_r_counts_per_loop = 0;
+    motor_r_counts_per_loop = wheel_r_.cmd * 2; // 60;
 
     comms_.set_motor_values(motor_f_counts_per_loop, motor_r_counts_per_loop);
 
