@@ -6,6 +6,8 @@
 // #include <cstdlib>
 #include <libserial/SerialPort.h>
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 LibSerial::BaudRate convert_baud_rate(int baud_rate)
 {
@@ -46,7 +48,12 @@ public:
 
   void connect(const std::string &serial_device, int32_t baud_rate, int32_t timeout_ms)
   {
+    timeoutCounter = 0;
+
     timeout_ms_ = timeout_ms;
+    serial_device_ = serial_device;
+    baud_rate_ = baud_rate;
+
     serial_conn_.Open(serial_device);
     serial_conn_.SetBaudRate(convert_baud_rate(baud_rate));
   }
@@ -74,7 +81,23 @@ public:
     }
     catch (const LibSerial::ReadTimeout &)
     {
+      timeoutCounter++;
       std::cerr << "The ReadLine() call has timed out." << std::endl;
+
+      if (timeoutCounter > 1)
+      {
+        timeoutCounter = 1;
+
+        this->disconnect();
+
+        using namespace std::this_thread;     // sleep_for
+        using namespace std::chrono_literals; // ns, us, ms, s, h, etc.
+        sleep_for(100ms);                     //? Delete?
+
+        this->connect(serial_device_, baud_rate_, timeout_ms_);
+
+        std::cerr << "The communication is connected!!!" << std::endl;
+      }
     }
 
     if (print_output)
@@ -114,6 +137,9 @@ public:
 private:
   LibSerial::SerialPort serial_conn_;
   int timeout_ms_;
+  std::string serial_device_;
+  int32_t baud_rate_;
+  int timeoutCounter;
 };
 
 #endif // BICYCLEDRIVE_ARDUINO_COMMS_HPP
